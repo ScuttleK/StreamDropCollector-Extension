@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Stream Drop Collector</title>
+    <link rel="stylesheet" href="popup.css" />
+    <script src="popup.js" defer></script>
+  </head>
+  <body>
+    <header class="header">
+      <img class="header__logo" src="../icons/icon-48.png" alt="" />
+      <div class="header__titles">
+        <div class="header__title">Stream Drop Collector</div>
+        <div class="header__subtitle" id="statusLine">Extension</div>
+      </div>
+      <label class="toggle toggle--large" title="Turn the extension on or off">
+        <input type="checkbox" id="enabled" />
+        <span class="toggle__track"></span>
+      </label>
+    </header>
+
+    <section class="update" id="updateCard" hidden>
+      <div class="update__head">
+        <div>
+          <div class="update__title">Update available</div>
+          <div class="update__versions" id="updateVersions"></div>
+        </div>
+        <button class="btn btn--primary" id="downloadUpdate">Download</button>
+      </div>
+      <div class="update__changes" id="updateChanges"></div>
+      <div class="update__hint">Extract the new version over your extension folder, then press reload on the extensions page.</div>
+    </section>
+
+    <section class="card stats">
+      <div class="stat">
+        <div class="stat__value" id="statPoints">0</div>
+        <div class="stat__label">Channel points</div>
+      </div>
+      <div class="stat">
+        <div class="stat__value" id="statBonuses">0</div>
+        <div class="stat__label">Bonuses</div>
+      </div>
+      <div class="stat">
+        <div class="stat__value" id="statDrops">0</div>
+        <div class="stat__label">Drops</div>
+      </div>
+      <div class="stat">
+        <div class="stat__value" id="statMoments">0</div>
+        <div class="stat__label">Moments</div>
+      </div>
+    </section>
+
+    <nav class="tabs">
+      <button class="tabs__tab tabs__tab--active" data-tab="activity">Activity</button>
+      <button class="tabs__tab" data-tab="settings">Settings</button>
+    </nav>
+
+    <section class="panel" id="panel-activity">
+      <ul class="history" id="history"></ul>
+      <div class="empty" id="historyEmpty">Nothing claimed yet. Keep a Twitch channel open while you're logged in and claims will show up here.</div>
+    </section>
+
+    <section class="panel" id="panel-settings" hidden>
+      <div class="group">
+        <div class="group__title">Claim automatically</div>
+        <label class="row"><span>Channel point bonuses</span><span class="toggle"><input type="checkbox" data-setting="points" /><span class="toggle__track"></span></span></label>
+        <label class="row"><span>Drops</span><span class="toggle"><input type="checkbox" data-setting="drops" /><span class="toggle__track"></span></span></label>
+        <label class="row"><span>Moments</span><span class="toggle"><input type="checkbox" data-setting="moments" /><span class="toggle__track"></span></span></label>
+      </div>
+      <div class="group">
+        <div class="group__title">Keep watching</div>
+        <label class="row"><span>Stop the browser from putting Twitch tabs to sleep</span><span class="toggle"><input type="checkbox" data-setting="keepAlive" /><span class="toggle__track"></span></span></label>
+        <label class="row"><span>Reload the player if the stream stalls</span><span class="toggle"><input type="checkbox" data-setting="reloadOnError" /><span class="toggle__track"></span></span></label>
+      </div>
+      <div class="group">
+        <div class="group__title">Notifications</div>
+        <label class="row"><span>Channel point bonuses</span><span class="toggle"><input type="checkbox" data-setting="notifyPoints" /><span class="toggle__track"></span></span></label>
+        <label class="row"><span>Drops</span><span class="toggle"><input type="checkbox" data-setting="notifyDrops" /><span class="toggle__track"></span></span></label>
+        <label class="row"><span>Moments</span><span class="toggle"><input type="checkbox" data-setting="notifyMoments" /><span class="toggle__track"></span></span></label>
+      </div>
+      <div class="group">
+        <div class="group__title">Updates</div>
+        <label class="row">
+          <span>Check for updates</span>
+          <select data-setting="updateCheck">
+            <option value="startup">Every time the browser starts</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="never">Never</option>
+          </select>
+        </label>
+        <div class="actions">
+          <button class="btn" id="checkUpdates">Check for updates now</button>
+          <button class="btn" id="checkDrops">Check drops now</button>
+          <button class="btn btn--danger" id="resetStats">Reset stats</button>
+        </div>
+        <div class="note" id="actionNote"></div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span id="version"></span>
+      <a href="https://github.com/ScuttleK/stream-drop-collector-extension" target="_blank" rel="noreferrer">GitHub</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "version": "3.0.0",
+  "changelog": [
+    "Rebuilt from scratch: all-new code, MIT-licensed, with nothing left from the original Automatic Twitch extension",
+    "Claims channel point bonuses as soon as Twitch offers them, with Twitch's own Claim Bonus button as a fallback",
+    "Claims finished Drops (checks every 5 minutes and when Twitch reports a drop is ready) and Moments",
+    "Activity history and stats, optional notifications, keeps Twitch tabs awake and reloads a stalled stream",
+    "Update checker like the desktop app's: every browser start, daily, weekly or never"
+  ],
+  "history": []
+}
