@@ -20,6 +20,8 @@
 - **Moments** - claimed when a channel starts one.
 - **Keeps watching** - stops the browser from putting Twitch tabs to sleep, and reloads a stream that has stalled.
 - **Activity and stats** - what was claimed and when, with optional notifications.
+- **Channels** - every channel you've collected points on, the total and since when, with a 14-day chart and its
+  best days.
 - **Update checks** - like the desktop app: every browser start, daily, weekly or never.
 
 Works in Chrome, Brave, Edge and other Chromium browsers, and in Firefox / LibreWolf (128 or newer).

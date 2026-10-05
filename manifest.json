@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Stream Drop Collector Extension",
   "short_name": "Stream Drop Collector",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Automatically claims Twitch channel point bonuses, Drops and Moments while you watch. Companion to the Stream Drop Collector app.",
   "author": "ScuttleK",
   "homepage_url": "https://github.com/ScuttleK/stream-drop-collector-extension",

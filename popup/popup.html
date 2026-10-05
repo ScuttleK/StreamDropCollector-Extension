@@ -52,12 +52,26 @@
 
     <nav class="tabs">
       <button class="tabs__tab tabs__tab--active" data-tab="activity">Activity</button>
+      <button class="tabs__tab" data-tab="channels">Channels</button>
       <button class="tabs__tab" data-tab="settings">Settings</button>
     </nav>
 
     <section class="panel" id="panel-activity">
       <ul class="history" id="history"></ul>
       <div class="empty" id="historyEmpty">Nothing claimed yet. Keep a Twitch channel open while you're logged in and claims will show up here.</div>
+    </section>
+
+    <section class="panel" id="panel-channels" hidden>
+      <div class="card chart-card" id="overallCard">
+        <div class="chart-card__head">
+          <div class="group__title">Points per day</div>
+          <div class="chart-card__range">Last 14 days</div>
+        </div>
+        <div class="bars" id="overallBars"></div>
+        <div class="best" id="overallBest"></div>
+      </div>
+      <ul class="channels" id="channelList"></ul>
+      <div class="empty" id="channelsEmpty">No channel points claimed yet. Every channel you collect bonuses on will be listed here with its total.</div>
     </section>
 
     <section class="panel" id="panel-settings" hidden>

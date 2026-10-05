@@ -91,8 +91,102 @@ function renderUpdate(update) {
   }
 }
 
+// ---------------------------------------------------------------------------------------------------------
+// Channels tab: all-time points per channel, plus small per-day bar charts with the top 3 days highlighted
+// ---------------------------------------------------------------------------------------------------------
+
+const CHART_DAYS = 14;
+
+function dayKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function lastDays(count) {
+  const days = [];
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+  for (let i = count - 1; i >= 0; i--) days.push(dayKey(new Date(today.getTime() - i * 86400000)));
+  return days;
+}
+
+const shortDay = (key) => new Date(`${key}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+const longDate = (at) => new Date(at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+
+function topDays(days, n = 3) {
+  return Object.entries(days || {})
+    .filter(([, points]) => points > 0)
+    .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? 1 : -1))
+    .slice(0, n);
+}
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function renderBars(container, days, highlight) {
+  container.replaceChildren();
+  const keys = lastDays(CHART_DAYS);
+  const max = Math.max(1, ...keys.map((k) => days[k] || 0));
+  for (const key of keys) {
+    const value = days[key] || 0;
+    const bar = el("span", `bars__bar${highlight.has(key) ? " bars__bar--top" : ""}${value ? "" : " bars__bar--empty"}`);
+    bar.style.height = `${value ? Math.max(8, Math.round((value / max) * 100)) : 4}%`;
+    bar.title = `${shortDay(key)}: ${value.toLocaleString()} points`;
+    container.append(bar);
+  }
+}
+
+function bestText(top) {
+  return top.length ? `Best days: ${top.map(([day, pts]) => `${shortDay(day)} +${pts.toLocaleString()}`).join(" · ")}` : "";
+}
+
+function renderChannels(channels) {
+  const entries = Object.entries(channels || {}).sort((a, b) => b[1].points - a[1].points);
+  $("channelsEmpty").hidden = entries.length > 0;
+  $("overallCard").hidden = entries.length === 0;
+
+  // Overall chart: every channel's daily points added together.
+  const overall = {};
+  for (const [, info] of entries) for (const [day, pts] of Object.entries(info.days || {})) overall[day] = (overall[day] || 0) + pts;
+  const overallTop = topDays(overall);
+  renderBars($("overallBars"), overall, new Set(overallTop.map(([day]) => day)));
+  $("overallBest").textContent = bestText(overallTop);
+
+  const list = $("channelList");
+  list.replaceChildren();
+  for (const [name, info] of entries) {
+    const item = el("li", "channel");
+
+    const head = el("div", "channel__head");
+    const avatar = el("span", "channel__avatar", name === "unknown" ? "?" : name[0].toUpperCase());
+    const titles = el("div", "channel__titles");
+    const title = name === "unknown" ? el("span", "channel__name", "Other channels") : el("a", "channel__name", name);
+    if (name !== "unknown") {
+      title.href = `https://www.twitch.tv/${encodeURIComponent(name)}`;
+      title.target = "_blank";
+      title.rel = "noreferrer";
+    }
+    const since = el("div", "channel__since", `Since ${longDate(info.first)} · ${info.bonuses.toLocaleString()} bonus${info.bonuses === 1 ? "" : "es"}`);
+    titles.append(title, since);
+    const total = el("div", "channel__total", `+${info.points.toLocaleString()}`);
+    head.append(avatar, titles, total);
+
+    const top = topDays(info.days);
+    const bars = el("div", "bars bars--small");
+    renderBars(bars, info.days || {}, new Set(top.map(([day]) => day)));
+    const best = el("div", "best", bestText(top));
+
+    item.append(head, bars, best);
+    list.append(item);
+  }
+}
+
 function render() {
   const { settings, stats, history, update, version, tabs } = state;
+  renderChannels(state.channels);
   $("enabled").checked = settings.enabled;
   $("statusLine").textContent = !settings.enabled ? "Paused" : tabs ? `Active in ${tabs} Twitch tab${tabs === 1 ? "" : "s"}` : "Waiting for a Twitch tab";
   $("statPoints").textContent = (stats.points || 0).toLocaleString();
@@ -137,8 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
   for (const tab of document.querySelectorAll(".tabs__tab")) {
     tab.addEventListener("click", () => {
       for (const other of document.querySelectorAll(".tabs__tab")) other.classList.toggle("tabs__tab--active", other === tab);
-      $("panel-activity").hidden = tab.dataset.tab !== "activity";
-      $("panel-settings").hidden = tab.dataset.tab !== "settings";
+      for (const name of ["activity", "channels", "settings"]) $(`panel-${name}`).hidden = tab.dataset.tab !== name;
     });
   }
 
@@ -180,6 +273,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === "local" && (changes.stats || changes.history || changes.update)) refresh();
+    if (area === "local" && (changes.stats || changes.history || changes.update || changes.channels)) refresh();
   });
 });

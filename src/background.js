@@ -46,13 +46,47 @@ async function getSettings() {
 }
 
 async function ensureDefaults() {
-  const stored = await getLocal(["settings", "stats", "history", "hashes"]);
+  const stored = await getLocal(["settings", "stats", "history", "hashes", "channels"]);
+  const history = Array.isArray(stored.history) ? stored.history : [];
+  // First run with per-channel totals: seed them from the points already in the activity history.
+  let channels = stored.channels;
+  if (!channels || typeof channels !== "object") {
+    channels = {};
+    for (const entry of [...history].reverse()) if (entry.kind === "points") addChannelPoints(channels, entry.channel, entry.points, entry.at);
+  }
   await setLocal({
     settings: { ...DEFAULT_SETTINGS, ...stored.settings },
     stats: { ...DEFAULT_STATS, since: Date.now(), ...stored.stats },
-    history: Array.isArray(stored.history) ? stored.history : [],
+    history,
     hashes: stored.hashes || {},
+    channels,
   });
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Per-channel totals: { [channel]: { first, last, points, bonuses, days: { "YYYY-MM-DD": points } } }.
+// Totals are all-time; the per-day breakdown keeps the last DAYS_KEPT days for the charts.
+// ---------------------------------------------------------------------------------------------------------
+
+const DAYS_KEPT = 90;
+
+function dayKey(at) {
+  const d = new Date(at);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function addChannelPoints(channels, channel, points, at = Date.now()) {
+  const name = (channel || "").trim().toLowerCase() || "unknown";
+  const entry = channels[name] || { first: at, last: at, points: 0, bonuses: 0, days: {} };
+  entry.first = Math.min(entry.first, at);
+  entry.last = Math.max(entry.last, at);
+  entry.points += points || 0;
+  entry.bonuses += 1;
+  const key = dayKey(at);
+  entry.days[key] = (entry.days[key] || 0) + (points || 0);
+  const cutoff = dayKey(Date.now() - DAYS_KEPT * 86400000);
+  for (const day of Object.keys(entry.days)) if (day < cutoff) delete entry.days[day];
+  channels[name] = entry;
 }
 
 // Serialize read-modify-write updates so two quick claims can't overwrite each other's history entry.
@@ -74,16 +108,19 @@ function takeLock(key) {
 
 function recordEvent(entry) {
   return queued(async () => {
-    const { stats, history } = await getLocal(["stats", "history"]);
+    const { stats, history, channels } = await getLocal(["stats", "history", "channels"]);
     const nextStats = { ...DEFAULT_STATS, ...stats };
+    const nextChannels = channels && typeof channels === "object" ? channels : {};
+    const at = Date.now();
     if (entry.kind === "points") {
       nextStats.points += entry.points || 0;
       nextStats.bonuses += 1;
+      addChannelPoints(nextChannels, entry.channel, entry.points, at);
     } else if (entry.kind === "drops") nextStats.drops += 1;
     else if (entry.kind === "moments") nextStats.moments += 1;
 
-    const nextHistory = [{ ...entry, at: Date.now() }, ...(Array.isArray(history) ? history : [])].slice(0, HISTORY_LIMIT);
-    await setLocal({ stats: nextStats, history: nextHistory });
+    const nextHistory = [{ ...entry, at }, ...(Array.isArray(history) ? history : [])].slice(0, HISTORY_LIMIT);
+    await setLocal({ stats: nextStats, history: nextHistory, channels: nextChannels });
   });
 }
 
@@ -284,8 +321,8 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
 
       // --- from the popup ---
       case "getState": {
-        const stored = await getLocal(["stats", "history", "update"]);
-        return { settings: await getSettings(), stats: { ...DEFAULT_STATS, ...stored.stats }, history: stored.history || [], update: stored.update || null, version: version(), tabs: (await twitchTabs()).length };
+        const stored = await getLocal(["stats", "history", "update", "channels"]);
+        return { settings: await getSettings(), stats: { ...DEFAULT_STATS, ...stored.stats }, history: stored.history || [], channels: stored.channels || {}, update: stored.update || null, version: version(), tabs: (await twitchTabs()).length };
       }
       case "saveSettings": {
         const settings = { ...(await getSettings()), ...message.settings };
@@ -293,7 +330,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
         return { settings };
       }
       case "resetStats":
-        await setLocal({ stats: { ...DEFAULT_STATS, since: Date.now() }, history: [] });
+        await setLocal({ stats: { ...DEFAULT_STATS, since: Date.now() }, history: [], channels: {} });
         return { ok: true };
       case "checkUpdates":
         return checkForUpdates({ notify: false });
