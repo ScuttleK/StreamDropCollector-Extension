@@ -51,7 +51,7 @@ Permissions: `storage` (settings and history), `alarms` (the 5-minute drops chec
 
 ## Install
 
-Download the latest release from the [Releases page](https://github.com/ScuttleK/stream-drop-collector-extension/releases/latest).
+Download the latest release from the [Releases page](https://github.com/ScuttleK/StreamDropCollector-Extension/releases/latest).
 
 **Chrome / Brave / Edge**
 

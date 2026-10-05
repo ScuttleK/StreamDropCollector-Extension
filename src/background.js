@@ -10,7 +10,7 @@
  */
 "use strict";
 
-const REPO = "ScuttleK/stream-drop-collector-extension";
+const REPO = "ScuttleK/StreamDropCollector-Extension";
 const UPDATE_INFO_URL = `https://raw.githubusercontent.com/${REPO}/main/updateInfo.json`;
 const RELEASES_URL = `https://github.com/${REPO}/releases/latest`;
 const HISTORY_LIMIT = 60;

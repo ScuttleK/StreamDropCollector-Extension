@@ -3,7 +3,7 @@
 ## Reporting a problem
 
 Please report security issues privately through GitHub's
-[private vulnerability reporting](https://github.com/ScuttleK/stream-drop-collector-extension/security/advisories/new)
+[private vulnerability reporting](https://github.com/ScuttleK/StreamDropCollector-Extension/security/advisories/new)
 rather than in a public issue.
 
 ## Design notes
